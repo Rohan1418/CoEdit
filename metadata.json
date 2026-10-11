@@ -1,0 +1,6 @@
+{
+  "name": "Collaborative Code Editor",
+  "description": "Real-time collaborative code editor with Monaco Editor, WebSocket synchronization, WebRTC peer-to-peer voice calling, room management, and persistent chat.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
