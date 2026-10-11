@@ -53,6 +53,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def add_cache_control_header(request, call_next):
+    response = await call_next(request)
+    if request.url.path == "/" or request.url.path.endswith(".html"):
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    return response
+
 # --- REST Endpoints: Root & Health Check ---
 if not os.path.exists(dist_dir):
     @app.get("/")

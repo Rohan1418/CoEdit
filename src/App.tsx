@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { SocketProvider, useSocket } from './context/SocketContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { MonacoEditor } from './components/MonacoEditor';
 import { FileExplorer } from './components/FileExplorer';
 import { ChatSidebar } from './components/ChatSidebar';
@@ -735,8 +736,10 @@ function CollaborativeApp() {
 
 export default function App() {
   return (
-    <SocketProvider>
-      <CollaborativeApp />
-    </SocketProvider>
+    <ErrorBoundary>
+      <SocketProvider>
+        <CollaborativeApp />
+      </SocketProvider>
+    </ErrorBoundary>
   );
 }
