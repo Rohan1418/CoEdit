@@ -118,6 +118,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         path: '/socket.io',
         auth: {
           token: token || undefined,
+          user_id: user.id,
           username: user.username,
           avatar_color: user.avatar_color
         },

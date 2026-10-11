@@ -77,10 +77,10 @@ async def connect(sid: str, environ: dict, auth: dict = None):
     else:
         # Allow guest connection for testing or fallback
         guest_id = f"guest_{str(uuid.uuid4())[:6]}"
-        user_id = guest_id
-        username = f"Developer {guest_id[-4:]}"
-        email = f"{guest_id}@collab.local"
-        avatar_color = "#10b981"
+        user_id = auth.get("user_id") if (auth and isinstance(auth, dict) and auth.get("user_id")) else guest_id
+        username = auth.get("username") if (auth and isinstance(auth, dict) and auth.get("username")) else f"Developer {guest_id[-4:]}"
+        email = f"{user_id}@collab.local"
+        avatar_color = auth.get("avatar_color") if (auth and isinstance(auth, dict) and auth.get("avatar_color")) else "#10b981"
 
     socket_sessions[sid] = {
         "sid": sid,
@@ -390,11 +390,18 @@ async def voice_join(sid: str, data: dict):
     """Marks user as active in voice channel and broadcasts to peers to trigger peer connections."""
     session = socket_sessions.get(sid)
     if not session:
-        return
+        return {"status": "error", "message": "Session not found"}
         
     room_id = data.get("room_id") or session.get("room_id")
+    if room_id:
+        session["room_id"] = room_id
+        if room_id not in room_participants:
+            room_participants[room_id] = set()
+        room_participants[room_id].add(sid)
+
     session["is_voice_active"] = True
     session["is_muted"] = data.get("is_muted", False)
+    logger.info(f"User joined voice: {session.get('username')} (sid={sid}) in room {room_id}")
 
     # Broadcast to room members that this user joined voice
     await sio.emit("peer_joined_voice", {
@@ -430,6 +437,7 @@ async def voice_leave(sid: str, data: dict):
         
     room_id = data.get("room_id") or session.get("room_id")
     session["is_voice_active"] = False
+    logger.info(f"User left voice: {session.get('username')} (sid={sid})")
 
     await sio.emit("peer_left_voice", {
         "user_id": session["user_id"],
@@ -468,6 +476,7 @@ async def webrtc_offer(sid: str, data: dict):
 
     dest_sid = target_sid or user_to_sid.get(target_user_id)
     if dest_sid:
+        logger.info(f"Routing webrtc_offer: {sid} -> {dest_sid}")
         await sio.emit("webrtc_offer", {
             "caller_sid": sid,
             "caller_user_id": session["user_id"] if session else data.get("sender_id"),
@@ -489,6 +498,7 @@ async def webrtc_answer(sid: str, data: dict):
 
     dest_sid = target_sid or user_to_sid.get(target_user_id)
     if dest_sid:
+        logger.info(f"Routing webrtc_answer: {sid} -> {dest_sid}")
         await sio.emit("webrtc_answer", {
             "responder_sid": sid,
             "responder_user_id": session["user_id"] if session else data.get("sender_id"),
