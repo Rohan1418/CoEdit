@@ -194,7 +194,7 @@ async def join_room(sid: str, data: dict):
         "participants": user_list
     }, room=room_id, skip_sid=sid)
 
-    return {"status": "success", "room_id": room_id}
+    return {"status": "success", "room_id": room_id, "participants": user_list}
 
 
 @sio.event

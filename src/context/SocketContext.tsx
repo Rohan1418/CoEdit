@@ -17,24 +17,32 @@ interface SocketContextType {
   setIsSimulated: (val: boolean) => void;
 }
 
-const SocketContext = createContext<SocketContextType | null>(null);
+const AVATAR_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#f97316'];
 
-const DEFAULT_USER: User = {
-  id: 'usr_' + Math.random().toString(36).substring(2, 8),
+const createRandomUser = (): User => ({
+  id: 'usr_' + Math.random().toString(36).substring(2, 9),
   username: 'Coder_' + Math.floor(1000 + Math.random() * 9000),
   email: 'coder@collab.dev',
-  avatar_color: '#3b82f6'
-};
+  avatar_color: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)]
+});
 
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [backendUrl, setBackendUrlState] = useState<string>(() => {
-    const saved = localStorage.getItem('collab_backend_url');
-    if (saved) return saved;
     if (import.meta.env.VITE_BACKEND_URL) {
       return import.meta.env.VITE_BACKEND_URL;
     }
-    if (typeof window !== 'undefined' && window.location.hostname) {
-      return `${window.location.protocol}//${window.location.hostname}:8000`;
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('collab_backend_url');
+      const isCloud = window.location.hostname.includes('.onrender.com') || window.location.hostname.includes('.run.app') || window.location.hostname.includes('.app');
+      if (isCloud) {
+        return window.location.origin;
+      }
+      if (saved) return saved;
+
+      if (window.location.port === '3000' || window.location.port === '5173') {
+        return `${window.location.protocol}//${window.location.hostname}:8000`;
+      }
+      return window.location.origin;
     }
     return 'http://localhost:8000';
   });
@@ -52,7 +60,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // fallback
       }
     }
-    return DEFAULT_USER;
+    return createRandomUser();
   });
 
   const [socket, setSocket] = useState<Socket | null>(null);
