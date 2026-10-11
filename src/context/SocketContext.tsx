@@ -17,6 +17,8 @@ interface SocketContextType {
   setIsSimulated: (val: boolean) => void;
 }
 
+const SocketContext = createContext<SocketContextType | null>(null);
+
 const AVATAR_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#f97316'];
 
 const createRandomUser = (): User => ({
